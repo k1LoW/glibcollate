@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/k1LoW/glibcollate"
-	"github.com/k1LoW/glibcollate/glibc2_41/en_us_utf8"
-	"github.com/k1LoW/glibcollate/internal/strcoll"
-	"github.com/k1LoW/glibcollate/internal/tables/lccollate_f062bf818ec7"
+	"github.com/k1LoW/glibctext/collate"
+	"github.com/k1LoW/glibctext/collate/glibc2_41/en_us_utf8"
+	"github.com/k1LoW/glibctext/internal/strcoll"
+	"github.com/k1LoW/glibctext/internal/tables/lccollate_f062bf818ec7"
 )
 
 // The expected values below were measured with strcoll on Debian glibc
@@ -95,12 +95,12 @@ func TestEqualIsZero(t *testing.T) {
 
 func TestLookup(t *testing.T) {
 	for _, name := range []string{"en_US.UTF-8", "en_US.utf8", "en_US.Utf-8"} {
-		c, ok := glibcollate.Lookup(name, "2.41")
+		c, ok := collate.Lookup(name, "2.41")
 		if !ok || c != en_us_utf8.Collation {
 			t.Errorf("Lookup(%q, 2.41) = %v, %v", name, c, ok)
 		}
 	}
-	if _, ok := glibcollate.Lookup("en_US.UTF-8", "2.36"); ok {
+	if _, ok := collate.Lookup("en_US.UTF-8", "2.36"); ok {
 		t.Error("Lookup found a version that is not imported")
 	}
 }

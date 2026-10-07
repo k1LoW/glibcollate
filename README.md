@@ -1,15 +1,15 @@
-# glibcollate
+# glibctext
 
-glibcollate orders strings exactly as glibc's `strcoll` does for a given locale and glibc version. It is pure Go, with no cgo and no dependency on the host's libc, so it gives the same order on macOS, Windows and Linux.
+glibctext reproduces the locale-dependent string handling of glibc exactly, in pure Go with no cgo and no dependency on the host's libc. It gives the same results on macOS, Windows and Linux as glibc gives on Linux.
 
-It is meant for programs that have to reproduce the order of software running on glibc.
+It is meant for programs that have to reproduce the behavior of software running on glibc. Its scope is the locale categories that act on strings. Only collation (`LC_COLLATE`) is implemented so far, in the `collate` package, which orders strings exactly as glibc's `strcoll` does for a given locale and glibc version.
 
 ## Usage
 
 Each collation is a package named after the glibc version and the locale.
 
 ```go
-import "github.com/k1LoW/glibcollate/glibc2_41/en_us_utf8"
+import "github.com/k1LoW/glibctext/collate/glibc2_41/en_us_utf8"
 
 slices.SortFunc(names, func(a, b string) int {
 	if c := en_us_utf8.Collation.Compare(a, b); c != 0 {
@@ -25,11 +25,11 @@ A collation can also be looked up by name after its package is imported. The cod
 
 ```go
 import (
-	"github.com/k1LoW/glibcollate"
-	_ "github.com/k1LoW/glibcollate/glibc2_41/en_us_utf8"
+	"github.com/k1LoW/glibctext/collate"
+	_ "github.com/k1LoW/glibctext/collate/glibc2_41/en_us_utf8"
 )
 
-c, ok := glibcollate.Lookup("en_US.UTF-8", "2.41")
+c, ok := collate.Lookup("en_US.UTF-8", "2.41")
 ```
 
 Only the collation packages a program imports are linked into it. Each one adds roughly 0.7 MB of tables.
@@ -38,7 +38,7 @@ Only the collation packages a program imports are linked into it. Each one adds 
 
 | Package | Locale | glibc | Source image |
 | --- | --- | --- | --- |
-| `glibc2_41/en_us_utf8` | `en_US.UTF-8` | 2.41 (Debian 2.41-12+deb13u4) | `postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336` |
+| `collate/glibc2_41/en_us_utf8` | `en_US.UTF-8` | 2.41 (Debian 2.41-12+deb13u4) | `postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336` |
 
 The source image is used only to pin glibc. Pinned by digest, it fixes both the glibc build and its compiled `locale-archive`, so regenerating gives the same tables.
 
@@ -69,14 +69,14 @@ $ make difftest   # differential test against the real strcoll_l, needs Docker
    $ go run ./gen -image debian:bookworm@sha256:... -locale en_US.UTF-8
    ```
 
-   It writes `internal/tables/lccollate_<hash>` and `glibc<version>/<locale>`. Tables with the same content share one package.
+   It writes `internal/tables/lccollate_<hash>` and `collate/glibc<version>/<locale>`. Tables with the same content share one package.
 3. Add the image to `Makefile` and to `targets` in `devtools/difftest/strcoll_test.go`, and run `make difftest`.
 
 Regression tests with expected values belong to each collation package, since they hold for one glibc version only.
 
 ## License
 
-glibcollate is licensed under the GNU Lesser General Public License version 2.1 or later. See [LICENSE](LICENSE).
+glibctext is licensed under the GNU Lesser General Public License version 2.1 or later. See [LICENSE](LICENSE).
 
 `internal/strcoll` is a port of files from the GNU C Library and keeps their notices.
 

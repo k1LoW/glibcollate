@@ -23,15 +23,15 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/k1LoW/glibcollate/internal/localename"
-	"github.com/k1LoW/glibcollate/internal/strcoll"
+	"github.com/k1LoW/glibctext/internal/localename"
+	"github.com/k1LoW/glibctext/internal/strcoll"
 )
 
 func main() {
 	image := flag.String("image", "", "container image, pinned by digest")
 	platform := flag.String("platform", "linux/amd64", "platform of the image")
 	locale := flag.String("locale", "en_US.UTF-8", "locale name")
-	out := flag.String("out", "..", "root directory of the glibcollate module")
+	out := flag.String("out", "..", "root directory of the glibctext module")
 	flag.Parse()
 	if *image == "" {
 		log.Fatal("-image is required")
@@ -45,7 +45,7 @@ func run(image, platform, locale, out string) error {
 	if !strings.Contains(image, "@sha256:") {
 		return fmt.Errorf("image %s must be pinned by digest so that the output is reproducible", image)
 	}
-	tmp, err := os.MkdirTemp("", "glibcollate-gen")
+	tmp, err := os.MkdirTemp("", "glibctext-gen")
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func run(image, platform, locale, out string) error {
 	if err != nil {
 		return err
 	}
-	if err := writeFile(filepath.Join(out, versionDir, pkg, "collation.go"), src); err != nil {
+	if err := writeFile(filepath.Join(out, "collate", versionDir, pkg, "collation.go"), src); err != nil {
 		return err
 	}
 	log.Printf("%s glibc %s (Debian %s): LC_COLLATE sha256 %s", locale, glibcVersion, debVersion, hash)

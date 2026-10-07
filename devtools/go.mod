@@ -1,9 +1,9 @@
-module github.com/k1LoW/glibcollate/devtools
+module github.com/k1LoW/glibctext/devtools
 
 go 1.25.0
 
 require (
-	github.com/k1LoW/glibcollate v0.0.0
+	github.com/k1LoW/glibctext v0.0.0
 	github.com/testcontainers/testcontainers-go v0.44.0
 )
 
@@ -60,4 +60,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/k1LoW/glibcollate => ../
+replace github.com/k1LoW/glibctext => ../

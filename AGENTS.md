@@ -1,8 +1,8 @@
 # AGENTS.md
 
-## What glibcollate is for
+## What glibctext is for
 
-glibcollate orders strings exactly as glibc's `strcoll` does for a given locale and glibc version, in pure Go. Exactness is the whole point. A result that is usually right is worse than none, because a wrong order looks like any other order and nobody notices it.
+glibctext reproduces the locale-dependent string handling of glibc exactly, in pure Go. Its scope is the locale categories that act on strings (`LC_COLLATE` now, possibly `LC_CTYPE` later), not formatting categories such as `LC_NUMERIC` or `LC_TIME`. The `collate` package orders strings exactly as glibc's `strcoll` does for a given locale and glibc version. Exactness is the whole point. A result that is usually right is worse than none, because a wrong order looks like any other order and nobody notices it.
 
 This sets the rules for every change.
 
@@ -14,8 +14,8 @@ This sets the rules for every change.
 ## Layout
 
 ```
-glibcollate.go                 Collation, Register, Lookup. No dependencies.
-glibc<ver>/<locale>/           One package per glibc version and locale (generated collation.go, hand-written tests)
+collate/                       Collation, Register, Lookup. No dependencies.
+  glibc<ver>/<locale>/         One package per glibc version and locale (generated collation.go, hand-written tests)
 internal/strcoll/              Port of string/strcoll_l.c and locale/weight.h, plus CheckBounded
 internal/tables/lccollate_<h>/ Generated tables, named by the first 12 hex digits of the LC_COLLATE sha256
 internal/localename/           Locale name normalization, same as glibc's _nl_normalize_codeset
@@ -27,8 +27,8 @@ devtools/                      Separate module (testcontainers etc.), replace =>
 ## Rules that must hold
 
 - **`Compare` returns exactly what `strcoll_l` returns.** The difftest checks the exact value, not only the sign. `Compare` never breaks ties by byte order. Callers do that themselves.
-- **A published collation never changes meaning.** There is no unversioned name such as `EnUS`. A new glibc gets a new package (`glibc2_42/en_us_utf8`) even when its data is identical, in which case it imports the same `internal/tables` package.
-- **Only imported collations are linked.** The root package never imports collation packages. Tables are static data (string constants and `int32` composite literals), and a collation package's `init` only calls `Register`. Do not build tables in `init`. Verify with `go tool nm` on a binary that imports only the root package.
+- **A published collation never changes meaning.** There is no unversioned name such as `EnUS`. A new glibc gets a new package (`collate/glibc2_42/en_us_utf8`) even when its data is identical, in which case it imports the same `internal/tables` package.
+- **Only imported collations are linked.** The `collate` package never imports collation packages. Tables are static data (string constants and `int32` composite literals), and a collation package's `init` only calls `Register`. Do not build tables in `init`. Verify with `go tool nm` on a binary that imports only the `collate` package.
 - **The root module has zero dependencies and no cgo.** Anything that needs Docker, testcontainers or C lives in `devtools`. `CGO_ENABLED=0 go build ./...` must keep working for every GOOS/GOARCH.
 - **`Compare` does not allocate.** `TestCompareDoesNotAllocate` guards it.
 - **Input is read as C strings.** Bytes are looked up as they are, so invalid UTF-8 is ordered as glibc orders it. An embedded NUL ends the string. `at()` returns NUL past the end of the Go string.
@@ -56,7 +56,7 @@ devtools/                      Separate module (testcontainers etc.), replace =>
 1. **Pick the image.** It must be Debian or Ubuntu based (the generator reads the libc6 version from `/var/lib/dpkg/status`), and it must have the locale in `/usr/lib/locale/locale-archive`. Pin it by digest. The image is used only to pin glibc and its compiled archive. When the locale is missing, the generator lists the locales the archive has.
 2. **Check the C source.** Diff `string/strcoll_l.c` and `locale/weight.h` between the version the port came from (2.41) and the new one. If they differ, the new version needs its own port. Do not change the existing port in a way that alters the result for published collations. Install `glibc-source` in the image to get the exact tarball and `debian/patches`.
 3. **Check the distro patches.** Grep `debian/patches` for `string/strcoll`, `locale/weight`, `locale/loadlocale`, `categories.def`, `ld-collate`, `localedata/locales/`. For 2.41-12+deb13u4, only `locale/check-unknown-symbols.diff` touches `ld-collate.c`, and it only adds a warning.
-4. **Generate.** Add `IMAGE_GLIBC<ver>` to the `Makefile` and run the generator, for example `cd devtools && go run ./gen -image <image@digest> -locale en_US.UTF-8`. It writes `internal/tables/lccollate_<h>/table.go` and `glibc<ver>/<pkg>/collation.go`. Running it twice must give identical files.
+4. **Generate.** Add `IMAGE_GLIBC<ver>` to the `Makefile` and run the generator, for example `cd devtools && go run ./gen -image <image@digest> -locale en_US.UTF-8`. It writes `internal/tables/lccollate_<h>/table.go` and `collate/glibc<ver>/<pkg>/collation.go`. Running it twice must give identical files.
 5. **Write the regression tests.** Add `collation_test.go` to the new package with values measured on the real glibc of that image, never copied from another version. Include `TestNeverReadsPastNUL` for its table.
 6. **Add the difftest target** to `targets` in `devtools/difftest/strcoll_test.go` and run `make difftest`.
 7. **Update the docs.** Add the collation to the table in `README.md`.

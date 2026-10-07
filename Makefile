@@ -5,10 +5,10 @@ IMAGE_GLIBC2_41 = postgres:18@sha256:74935e72241653ca55e0414067e6d8763aceb8a810e
 default: test
 
 ci:
-	go test ./... -coverprofile=coverage.out -covermode=count
+	go test ./... -coverpkg=./... -coverprofile=coverage.out -covermode=count
 
 test:
-	go test ./... -coverprofile=coverage.out -covermode=count
+	go test ./... -coverpkg=./... -coverprofile=coverage.out -covermode=count
 
 race:
 	go test ./... -race

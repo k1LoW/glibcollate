@@ -1,4 +1,4 @@
-// Package difftest compares the collations of glibcollate with the real
+// Package difftest compares the collations of glibctext with the real
 // strcoll_l of the image their tables were taken from.
 package difftest
 

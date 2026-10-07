@@ -19,7 +19,7 @@ func tableSource(pkg, hash string, d *lcCollateData) ([]byte, error) {
 	b.WriteString("// The data was compiled by glibc's localedef from the locale sources of the\n")
 	b.WriteString("// GNU C Library. See the README of this module for the notices.\n")
 	fmt.Fprintf(&b, "package %s\n\n", pkg)
-	b.WriteString("import \"github.com/k1LoW/glibcollate/internal/strcoll\"\n\n")
+	b.WriteString("import \"github.com/k1LoW/glibctext/internal/strcoll\"\n\n")
 	b.WriteString("// Table is the LC_COLLATE data strcoll reads.\n")
 	b.WriteString("var Table = &strcoll.Table{\n")
 	fmt.Fprintf(&b, "\tNRules: %d,\n", d.NRules)
@@ -84,21 +84,21 @@ var collationTmpl = template.Must(template.New("").Parse(header + `// Package {{
 // ({{.Platform}}), which ships Debian glibc {{.DebVersion}}.
 // The sha256 of that LC_COLLATE file is {{.Hash}}.
 //
-// Importing this package registers [Collation] with glibcollate.Register,
-// so that glibcollate.Lookup("{{.Locale}}", "{{.GlibcVersion}}") returns it.
+// Importing this package registers [Collation] with collate.Register,
+// so that collate.Lookup("{{.Locale}}", "{{.GlibcVersion}}") returns it.
 package {{.Package}}
 
 import (
-	"github.com/k1LoW/glibcollate"
-	"github.com/k1LoW/glibcollate/internal/tables/{{.TablePkg}}"
+	"github.com/k1LoW/glibctext/collate"
+	"github.com/k1LoW/glibctext/internal/tables/{{.TablePkg}}"
 )
 
 // Collation orders strings as strcoll_l does for {{.Locale}} with glibc {{.GlibcVersion}}
 // (Debian {{.DebVersion}}).
-var Collation glibcollate.Collation = {{.TablePkg}}.Table
+var Collation collate.Collation = {{.TablePkg}}.Table
 
 func init() {
-	glibcollate.Register("{{.Locale}}", "{{.GlibcVersion}}", Collation)
+	collate.Register("{{.Locale}}", "{{.GlibcVersion}}", Collation)
 }
 `))
 

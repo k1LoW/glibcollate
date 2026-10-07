@@ -8,19 +8,19 @@
 // (linux/amd64), which ships Debian glibc 2.41-12+deb13u4.
 // The sha256 of that LC_COLLATE file is f062bf818ec7c394208e4b12db855fbe3765ca1463b2e0cfe05e434f1c293981.
 //
-// Importing this package registers [Collation] with glibcollate.Register,
-// so that glibcollate.Lookup("en_US.UTF-8", "2.41") returns it.
+// Importing this package registers [Collation] with collate.Register,
+// so that collate.Lookup("en_US.UTF-8", "2.41") returns it.
 package en_us_utf8
 
 import (
-	"github.com/k1LoW/glibcollate"
-	"github.com/k1LoW/glibcollate/internal/tables/lccollate_f062bf818ec7"
+	"github.com/k1LoW/glibctext/collate"
+	"github.com/k1LoW/glibctext/internal/tables/lccollate_f062bf818ec7"
 )
 
 // Collation orders strings as strcoll_l does for en_US.UTF-8 with glibc 2.41
 // (Debian 2.41-12+deb13u4).
-var Collation glibcollate.Collation = lccollate_f062bf818ec7.Table
+var Collation collate.Collation = lccollate_f062bf818ec7.Table
 
 func init() {
-	glibcollate.Register("en_US.UTF-8", "2.41", Collation)
+	collate.Register("en_US.UTF-8", "2.41", Collation)
 }

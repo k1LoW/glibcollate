@@ -1,3 +1,3 @@
-module github.com/k1LoW/glibcollate
+module github.com/k1LoW/glibctext
 
 go 1.24

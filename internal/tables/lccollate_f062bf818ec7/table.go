@@ -6,7 +6,7 @@
 // GNU C Library. See the README of this module for the notices.
 package lccollate_f062bf818ec7
 
-import "github.com/k1LoW/glibcollate/internal/strcoll"
+import "github.com/k1LoW/glibctext/internal/strcoll"
 
 // Table is the LC_COLLATE data strcoll reads.
 var Table = &strcoll.Table{

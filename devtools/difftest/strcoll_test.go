@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/k1LoW/glibcollate"
-	"github.com/k1LoW/glibcollate/glibc2_41/en_us_utf8"
+	"github.com/k1LoW/glibctext/collate"
+	"github.com/k1LoW/glibctext/collate/glibc2_41/en_us_utf8"
 )
 
 // targets lists each collation with the image its tables were generated from.
@@ -14,7 +14,7 @@ var targets = []struct {
 	locale    string
 	version   string
 	image     string
-	collation glibcollate.Collation
+	collation collate.Collation
 }{
 	{
 		locale:    "en_US.UTF-8",

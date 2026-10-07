@@ -1,10 +1,10 @@
-// Package glibcollate orders strings exactly as glibc's strcoll does for a
+// Package collate orders strings exactly as glibc's strcoll does for a
 // given locale and glibc version, in pure Go without cgo or the host's libc.
 //
 // Each collation lives in its own package named after the glibc version and
 // the locale, such as
 //
-//	github.com/k1LoW/glibcollate/glibc2_41/en_us_utf8
+//	github.com/k1LoW/glibctext/collate/glibc2_41/en_us_utf8
 //
 // Its tables are glibc's compiled LC_COLLATE data, taken from the
 // locale-archive of the image recorded in that package's documentation, and
@@ -20,16 +20,16 @@
 // Importing a collation package also registers it, so that it can be found
 // with [Lookup] as below.
 //
-//	import _ "github.com/k1LoW/glibcollate/glibc2_41/en_us_utf8"
+//	import _ "github.com/k1LoW/glibctext/collate/glibc2_41/en_us_utf8"
 //
-//	c, ok := glibcollate.Lookup("en_US.UTF-8", "2.41")
-package glibcollate
+//	c, ok := collate.Lookup("en_US.UTF-8", "2.41")
+package collate
 
 import (
 	"fmt"
 	"sync"
 
-	"github.com/k1LoW/glibcollate/internal/localename"
+	"github.com/k1LoW/glibctext/internal/localename"
 )
 
 // Collation orders strings as glibc's strcoll does for a locale.
@@ -54,13 +54,13 @@ var (
 // twice or c is nil.
 func Register(locale, version string, c Collation) {
 	if c == nil {
-		panic("glibcollate: Register collation is nil")
+		panic("collate: Register collation is nil")
 	}
 	k := key{localename.Normalize(locale), version}
 	mu.Lock()
 	defer mu.Unlock()
 	if _, dup := registry[k]; dup {
-		panic(fmt.Sprintf("glibcollate: Register called twice for %s (glibc %s)", locale, version))
+		panic(fmt.Sprintf("collate: Register called twice for %s (glibc %s)", locale, version))
 	}
 	registry[k] = c
 }
