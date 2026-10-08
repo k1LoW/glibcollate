@@ -10,17 +10,19 @@ import (
 // Layout of locale/locarchive.h in glibc.
 const (
 	arMagic     = 0xde020109
+	lcCtype     = 0  // __LC_CTYPE
 	lcCollate   = 3  // __LC_COLLATE
 	lcLast      = 13 // __LC_LAST
 	headerSize  = 14 * 4
 	namehashEnt = 3 * 4
 )
 
-// extractFromArchive returns the LC_COLLATE file stored in a locale-archive for
-// the locale name, which must already be normalized (such as en_US.utf8).
+// extractFromArchive returns the file of the category stored in a
+// locale-archive for the locale name, which must already be normalized (such
+// as en_US.utf8).
 // It scans the name hash table instead of probing it, since a linear scan
 // gives the same answer and needs no copy of glibc's hash function.
-func extractFromArchive(archive []byte, name string) ([]byte, error) {
+func extractFromArchive(archive []byte, name string, category uint32) ([]byte, error) {
 	le := binary.LittleEndian
 	if len(archive) < headerSize {
 		return nil, errors.New("locale-archive too short")
@@ -46,10 +48,10 @@ func extractFromArchive(archive []byte, name string) ([]byte, error) {
 		if n != name {
 			continue
 		}
-		rec := archive[locrecOffset+4+lcCollate*8:]
+		rec := archive[locrecOffset+4+category*8:]
 		off, size := le.Uint32(rec[0:]), le.Uint32(rec[4:])
 		if uint64(off)+uint64(size) > uint64(len(archive)) {
-			return nil, fmt.Errorf("LC_COLLATE record of %s out of range", name)
+			return nil, fmt.Errorf("record %d of %s out of range", category, name)
 		}
 		return archive[off : off+size], nil
 	}

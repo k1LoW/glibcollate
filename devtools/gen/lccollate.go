@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 )
 
@@ -47,30 +46,14 @@ type lcCollateData struct {
 	Codeset    string
 }
 
-// parseLCCollate reads a compiled LC_COLLATE file as _nl_intern_locale_data in
-// locale/loadlocale.c does. Each item runs from its offset to the next one,
-// so a table may carry the alignment padding that localedef appends.
+// parseLCCollate reads a compiled LC_COLLATE file.
 func parseLCCollate(data []byte) (*lcCollateData, error) {
 	le := binary.LittleEndian
-	if len(data) < 8 {
-		return nil, errors.New("LC_COLLATE too short")
+	items, err := lcItems(data, "LC_COLLATE", collateMagic, numItems)
+	if err != nil {
+		return nil, err
 	}
-	if m := le.Uint32(data[0:]); m != collateMagic {
-		return nil, fmt.Errorf("bad LC_COLLATE magic %#x, want %#x (big-endian data is not supported)", m, collateMagic)
-	}
-	nstrings := le.Uint32(data[4:])
-	if nstrings < numItems || 8+4*int(nstrings) >= len(data) {
-		return nil, fmt.Errorf("LC_COLLATE has %d items, want at least %d", nstrings, numItems)
-	}
-	offsets := make([]int, nstrings+1)
-	for i := range int(nstrings) {
-		offsets[i] = int(le.Uint32(data[8+4*i:]))
-		if offsets[i] > len(data) {
-			return nil, fmt.Errorf("item %d offset out of range", i)
-		}
-	}
-	offsets[nstrings] = len(data)
-	item := func(i int) []byte { return data[offsets[i]:offsets[i+1]] }
+	item := func(i int) []byte { return items[i] }
 	int32s := func(b []byte) []int32 {
 		out := make([]int32, len(b)/4)
 		for i := range out {
