@@ -21,15 +21,15 @@ func TestToLowerToUpperGlibc2_41(t *testing.T) {
 		{0, 0, 0},
 		{'Ä', 'ä', 'Ä'},
 		{'ÿ', 'ÿ', 'Ÿ'},
-		{'İ', 'i', 'İ'}, // U+0130 lowers to plain i, not as in tr_TR
-		{'ı', 'ı', 'I'}, // U+0131
-		{'ß', 'ß', 'ß'}, // no single character upper case
-		{'ẞ', 'ß', 'ẞ'}, // U+1E9E
-		{'ſ', 'ſ', 'S'}, // U+017F
-		{'ς', 'ς', 'Σ'}, // U+03C2
-		{'ǅ', 'ǆ', 'Ǆ'}, // U+01C5, title case
-		{'K', 'k', 'K'}, // U+212A KELVIN SIGN
-		{'ა', 'ა', 'Ა'}, // U+10D0 upper cases to Mtavruli
+		{'İ', 'i', 'İ'},           // U+0130 lowers to plain i, not as in tr_TR
+		{'ı', 'ı', 'I'},           // U+0131
+		{'ß', 'ß', 'ß'},           // no single character upper case
+		{'ẞ', 'ß', 'ẞ'},           // U+1E9E
+		{'ſ', 'ſ', 'S'},           // U+017F
+		{'ς', 'ς', 'Σ'},           // U+03C2
+		{'ǅ', 'ǆ', 'Ǆ'},           // U+01C5, title case
+		{'\u212A', 'k', '\u212A'}, // KELVIN SIGN
+		{'ა', 'ა', 'Ა'},           // U+10D0 upper cases to Mtavruli
 		{'日', '日', '日'},
 		// Unicode 16 additions, which Go's unicode package (Unicode 15)
 		// does not map.
