@@ -20,7 +20,8 @@ lint:
 generate:
 	cd devtools && go run ./gen -image $(IMAGE_GLIBC2_41) -locale en_US.UTF-8
 
-# Compares every collation with the real strcoll_l. Needs Docker.
+# Compares every collation with the real strcoll_l and every ctype with the
+# real towlower_l and towupper_l. Needs Docker.
 difftest:
 	cd devtools && go test -count=1 ./...
 

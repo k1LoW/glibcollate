@@ -112,3 +112,59 @@ func collationSource(p collationParams) ([]byte, error) {
 	}
 	return gofmt(&b)
 }
+
+// ctypeTableSource writes the towlower and towupper tables as static data.
+func ctypeTableSource(pkg, hash string, d *lcCtypeData) ([]byte, error) {
+	var b bytes.Buffer
+	b.WriteString(header)
+	fmt.Fprintf(&b, "// Package %s holds the towlower and towupper tables of a compiled\n", pkg)
+	fmt.Fprintf(&b, "// LC_CTYPE file whose sha256 is %s.\n", hash)
+	b.WriteString("// The data was compiled by glibc's localedef from the locale sources of the\n")
+	b.WriteString("// GNU C Library. See the README of this module for the notices.\n")
+	fmt.Fprintf(&b, "package %s\n\n", pkg)
+	b.WriteString("import \"github.com/k1LoW/glibctext/internal/wctype\"\n\n")
+	b.WriteString("// Table is the LC_CTYPE data towlower and towupper read.\n")
+	b.WriteString("var Table = &wctype.Table{\n")
+	b.WriteString("\tMaps: [2]string{toupper, tolower},\n")
+	b.WriteString("}\n\n")
+	writeString(&b, "toupper", d.ToUpper)
+	writeString(&b, "tolower", d.ToLower)
+	return gofmt(&b)
+}
+
+var ctypeTmpl = template.Must(template.New("").Parse(header + `// Package {{.Package}} maps the case of characters exactly as towlower and
+// towupper do for the {{.Locale}} locale of glibc {{.GlibcVersion}}.
+//
+// The tables are the compiled LC_CTYPE data of {{.ArchiveName}} in the
+// locale-archive of {{.Image}}
+// ({{.Platform}}), which ships Debian glibc {{.DebVersion}}.
+// The sha256 of that LC_CTYPE file is {{.Hash}}.
+//
+// Importing this package registers [Ctype] with ctype.Register,
+// so that ctype.Lookup("{{.Locale}}", "{{.GlibcVersion}}") returns it.
+package {{.Package}}
+
+import (
+	"github.com/k1LoW/glibctext/ctype"
+	"github.com/k1LoW/glibctext/internal/tables/{{.TablePkg}}"
+)
+
+// Ctype maps case as towlower_l and towupper_l do for {{.Locale}} with glibc {{.GlibcVersion}}
+// (Debian {{.DebVersion}}).
+var Ctype ctype.Ctype = {{.TablePkg}}.Table
+
+func init() {
+	ctype.Register("{{.Locale}}", "{{.GlibcVersion}}", Ctype)
+}
+`))
+
+func ctypeSource(p collationParams) ([]byte, error) {
+	var b bytes.Buffer
+	if err := ctypeTmpl.Execute(&b, p); err != nil {
+		return nil, err
+	}
+	if strings.Contains(p.Package, "-") {
+		return nil, fmt.Errorf("invalid package name %s", p.Package)
+	}
+	return gofmt(&b)
+}

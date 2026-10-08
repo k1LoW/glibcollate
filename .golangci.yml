@@ -23,9 +23,9 @@ linters:
           disabled: false
   exclusions:
     rules:
-      # The port reproduces the integer conversions of the C source on
-      # purpose, so that it wraps and truncates exactly as strcoll_l does.
-      - path: internal/strcoll/
+      # The ports reproduce the integer conversions of the C source on
+      # purpose, so that they wrap and truncate exactly as glibc does.
+      - path: internal/(strcoll|wctype)/
         linters:
           - gosec
         text: G115

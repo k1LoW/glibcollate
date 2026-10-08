@@ -1,5 +1,6 @@
-// Command gen extracts glibc's compiled LC_COLLATE data for a locale from a
-// container image and writes the Go tables and the collation package.
+// Command gen extracts glibc's compiled LC_COLLATE and LC_CTYPE data for a
+// locale from a container image and writes the Go tables, the collation
+// package and the ctype package.
 //
 //	go run ./gen -image debian:trixie@sha256:... -locale en_US.UTF-8
 //
@@ -84,7 +85,7 @@ func run(image, platform, locale, out string) error {
 	glibcVersion, _, _ := strings.Cut(debVersion, "-")
 
 	name := localename.Normalize(locale)
-	lc, err := extractFromArchive(archive, name)
+	lc, err := extractFromArchive(archive, name, lcCollate)
 	if err != nil {
 		return err
 	}
@@ -128,6 +129,43 @@ func run(image, platform, locale, out string) error {
 		return err
 	}
 	log.Printf("%s glibc %s (Debian %s): LC_COLLATE sha256 %s", locale, glibcVersion, debVersion, hash)
+
+	lc, err = extractFromArchive(archive, name, lcCtype)
+	if err != nil {
+		return err
+	}
+	cd, err := parseLCCtype(lc)
+	if err != nil {
+		return err
+	}
+	sum = sha256.Sum256(lc)
+	hash = hex.EncodeToString(sum[:])
+	tablePkg = "lcctype_" + hash[:12]
+	src, err = ctypeTableSource(tablePkg, hash, cd)
+	if err != nil {
+		return err
+	}
+	if err := writeFile(filepath.Join(out, "internal", "tables", tablePkg, "table.go"), src); err != nil {
+		return err
+	}
+	src, err = ctypeSource(collationParams{
+		Package:      pkg,
+		Locale:       locale,
+		ArchiveName:  name,
+		GlibcVersion: glibcVersion,
+		DebVersion:   debVersion,
+		Image:        image,
+		Platform:     platform,
+		Hash:         hash,
+		TablePkg:     tablePkg,
+	})
+	if err != nil {
+		return err
+	}
+	if err := writeFile(filepath.Join(out, "ctype", versionDir, pkg, "ctype.go"), src); err != nil {
+		return err
+	}
+	log.Printf("%s glibc %s (Debian %s): LC_CTYPE sha256 %s", locale, glibcVersion, debVersion, hash)
 	return nil
 }
 
